@@ -1,4 +1,5 @@
-import { Link, router } from "expo-router";
+import { Ionicons } from '@expo/vector-icons';
+import { router } from "expo-router";
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -44,7 +45,7 @@ export default function LoginScreen() {
     if (!validateInputs()) {
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const response = await authAPI.login({
@@ -71,7 +72,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <ImageBackground 
+    <ImageBackground
       source={Platform.select({
         web: { uri: '/assets/images/background.jpg' },
         default: require('@/assets/images/background.jpg')
@@ -80,18 +81,18 @@ export default function LoginScreen() {
       resizeMode="cover"
     >
       <StatusBar barStyle="light-content" />
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.select({ ios: 'padding', android: 'height', default: undefined })}
         style={styles.keyboardAvoid}
       >
         <View style={styles.container}>
           <View style={styles.logoContainer}>
-            <Image 
+            <Image
               source={Platform.select({
                 web: { uri: '/assets/images/logo.png' },
                 default: require('@/assets/images/logo.png')
               })}
-              style={styles.logo} 
+              style={styles.logo}
               resizeMode="contain"
             />
             <Text style={styles.title}>Welcome Back</Text>
@@ -100,10 +101,10 @@ export default function LoginScreen() {
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text> {/* Changed label */}
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email" // Changed placeholder
+                placeholder="Enter your email"
                 placeholderTextColor="#888"
                 value={email}
                 onChangeText={setEmail}
@@ -126,12 +127,16 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   editable={!isLoading}
                 />
-                <TouchableOpacity 
-                  style={styles.eyeIcon} 
+                <TouchableOpacity
+                  style={styles.eyeIcon}
                   onPress={togglePasswordVisibility}
                   disabled={isLoading}
                 >
-                  <Text>{isPasswordVisible ? '👁️' : '👁️‍🗨️'}</Text>
+                  <Ionicons
+                    name={isPasswordVisible ? "eye-off" : "eye"}
+                    size={24}
+                    color="#666"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -139,14 +144,14 @@ export default function LoginScreen() {
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[
-                styles.loginButton, 
-                (!email || !password) && styles.loginButtonDisabled // Changed from username to email
+                styles.loginButton,
+                (!email || !password) && styles.loginButtonDisabled
               ]}
               onPress={handleLogin}
-              disabled={!email || !password || isLoading} // Changed from username to email
+              disabled={!email || !password || isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
@@ -159,12 +164,8 @@ export default function LoginScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Don't have an account?
+              <Text style={styles.signupText} onPress={() => router.push('/signup')}> Sign Up</Text>
             </Text>
-            <Link href="/signup" asChild>
-              <TouchableOpacity>
-                <Text style={styles.signupText}> Sign Up</Text>
-              </TouchableOpacity>
-            </Link>
           </View>
         </View>
       </KeyboardAvoidingView>
