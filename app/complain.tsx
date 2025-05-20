@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { complaintsApi } from '../api/complaints';
 
 interface ComplaintData {
   firstName: string;
@@ -99,14 +100,14 @@ export default function BarangayComplaintForm() {
         Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload evidence photos.');
         return;
       }
-  
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
       });
-  
+
       if (!result.canceled) {
         const pickedAsset = result.assets[0];
         setComplaintData({
@@ -126,26 +127,26 @@ export default function BarangayComplaintForm() {
 
   const handleSubmit = async () => {
     const requiredFields: (keyof ComplaintData)[] = [
-      'firstName', 
-      'lastName', 
-      'contactNumber', 
-      'complainantAddress', 
-      'complaintType', 
-      'incidentDate', 
-      'incidentLocation', 
+      'firstName',
+      'lastName',
+      'contactNumber',
+      'complainantAddress',
+      'complaintType',
+      'incidentDate',
+      'incidentLocation',
       'complaintDescription'
     ];
-    
+
     const missingFields = requiredFields.filter(field => !complaintData[field]);
-    
+
     if (missingFields.length > 0 || !complaintData.isDeclarationChecked) {
       Alert.alert(
-        'Missing Information', 
+        'Missing Information',
         'Please fill in all required fields and check the declaration.'
       );
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
@@ -175,33 +176,11 @@ export default function BarangayComplaintForm() {
         } as any);
       }
 
-      const API_URL = 'http://192.168.1.14:8000/api/complaints';
-      console.log('Sending request to:', API_URL);
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: formDataToSend,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      // Log the raw response for debugging
-      const rawText = await response.text();
-      console.log('Raw server response:', rawText);
-
-      // Try to parse the response as JSON
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (e) {
-        console.error('Failed to parse JSON:', e);
-        throw new Error('Server returned invalid JSON. Please check the server logs.');
-      }
+      const data = await complaintsApi.submitComplaint(formDataToSend);
 
       if (data.status === 'success') {
         Alert.alert(
-          'Success', 
+          'Success',
           'Your complaint has been submitted successfully!',
           [{ text: 'OK', onPress: () => router.push('/service') }]
         );
@@ -229,8 +208,8 @@ export default function BarangayComplaintForm() {
   ];
 
   return (
-    <ImageBackground 
-      source={require('../assets/images/background.jpg')} 
+    <ImageBackground
+      source={require('../assets/images/background.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -243,17 +222,17 @@ export default function BarangayComplaintForm() {
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.formContainer}>
               <View style={styles.logoContainer}>
-                <Image 
-                  source={require('../assets/images/logo.png')} 
-                  style={styles.logo} 
+                <Image
+                  source={require('../assets/images/logo.png')}
+                  style={styles.logo}
                   resizeMode="contain"
                 />
                 <Text style={styles.formTitle}>Barangay Complaint Form</Text>
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Complainant Information</Text>
-                
+
                 <View style={styles.rowContainer}>
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>First Name *</Text>
@@ -265,7 +244,7 @@ export default function BarangayComplaintForm() {
                       placeholderTextColor="#888"
                     />
                   </View>
-                  
+
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>Last Name *</Text>
                     <TextInput
@@ -277,7 +256,7 @@ export default function BarangayComplaintForm() {
                     />
                   </View>
                 </View>
-                
+
                 <View style={styles.rowContainer}>
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>Contact Number *</Text>
@@ -290,7 +269,7 @@ export default function BarangayComplaintForm() {
                       keyboardType="phone-pad"
                     />
                   </View>
-                  
+
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>Email</Text>
                     <TextInput
@@ -304,7 +283,7 @@ export default function BarangayComplaintForm() {
                     />
                   </View>
                 </View>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Complete Address *</Text>
                   <TextInput
@@ -317,10 +296,10 @@ export default function BarangayComplaintForm() {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Complaint Details</Text>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Complaint Type *</Text>
                   <View style={styles.pickerContainer}>
@@ -331,20 +310,20 @@ export default function BarangayComplaintForm() {
                       itemStyle={{ fontSize: 14, height: 120 }}
                     >
                       {complaintTypes.map((item, index) => (
-                        <Picker.Item 
-                          key={index} 
-                          label={item.label} 
+                        <Picker.Item
+                          key={index}
+                          label={item.label}
                           value={item.value}
                         />
                       ))}
                     </Picker>
                   </View>
                 </View>
-                
+
                 <View style={styles.rowContainer}>
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>Incident Date *</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.datePickerButton}
                       onPress={() => setShowDatePicker(true)}
                     >
@@ -360,10 +339,10 @@ export default function BarangayComplaintForm() {
                       />
                     )}
                   </View>
-                  
+
                   <View style={[styles.inputContainer, styles.halfWidth]}>
                     <Text style={styles.inputLabel}>Incident Time</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.datePickerButton}
                       onPress={() => setShowTimePicker(true)}
                     >
@@ -379,7 +358,7 @@ export default function BarangayComplaintForm() {
                     )}
                   </View>
                 </View>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Incident Location *</Text>
                   <TextInput
@@ -390,7 +369,7 @@ export default function BarangayComplaintForm() {
                     placeholderTextColor="#888"
                   />
                 </View>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Complaint Description *</Text>
                   <TextInput
@@ -405,13 +384,13 @@ export default function BarangayComplaintForm() {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Evidence</Text>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Upload Evidence Photo</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.uploadButton}
                     onPress={handleImagePick}
                   >
@@ -420,12 +399,12 @@ export default function BarangayComplaintForm() {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                
+
                 {complaintData.evidencePhoto && (
                   <View style={styles.imagePreviewContainer}>
-                    <Image 
-                      source={{ uri: complaintData.evidencePhoto.uri }} 
-                      style={styles.imagePreview} 
+                    <Image
+                      source={{ uri: complaintData.evidencePhoto.uri }}
+                      style={styles.imagePreview}
                       resizeMode="cover"
                     />
                     <TouchableOpacity
@@ -437,10 +416,10 @@ export default function BarangayComplaintForm() {
                   </View>
                 )}
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Declaration</Text>
-                
+
                 <View style={styles.checkboxContainer}>
                   <TouchableOpacity
                     style={[
@@ -456,18 +435,18 @@ export default function BarangayComplaintForm() {
                   </Text>
                 </View>
               </View>
-              
+
               <View style={styles.buttonContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
                   onPress={() => router.replace('/service')}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[
-                    styles.button, 
+                    styles.button,
                     styles.submitButton,
                     (!complaintData.firstName || !complaintData.isDeclarationChecked) && styles.submitButtonDisabled
                   ]}
