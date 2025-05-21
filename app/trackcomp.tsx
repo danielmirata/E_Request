@@ -84,6 +84,7 @@ interface Complaint {
   description: string;
   incidentLocation: string;
   hasEvidence: boolean;
+  evidencePhoto?: string;
   comments: Array<{
     date: string;
     text: string;
@@ -121,6 +122,7 @@ export default function ComplaintTrackingPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [trackingResult, setTrackingResult] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const router = useRouter();
 
   const fetchComplaints = async () => {
@@ -147,20 +149,34 @@ export default function ComplaintTrackingPage() {
       console.log('API Response:', data);
 
       if (data.success) {
-        const formattedComplaints = data.complaints.map((complaint: any) => ({
-          id: complaint.complaint_id,
-          complaintType: complaint.complaint_type,
-          submittedDate: complaint.created_at,
-          status: complaint.status,
-          description: complaint.description,
-          incidentLocation: complaint.location,
-          hasEvidence: complaint.has_evidence === '1',
-          comments: complaint.remarks ? [{
-            date: complaint.updated_at,
-            text: complaint.remarks,
-            author: 'Admin'
-          }] : []
-        }));
+        const formattedComplaints = data.complaints.map((complaint: any) => {
+          // Log the evidence photo path
+          console.log('Evidence photo path:', complaint.evidence_photo);
+
+          // Remove the duplicate evidence_photos directory from the path
+          const evidencePhotoUrl = complaint.evidence_photo
+            ? `${API_CONFIG.BASE_URL}/uploads/evidence_photos/${complaint.evidence_photo.replace('evidence_photos/', '')}`
+            : undefined;
+
+          // Log the full evidence photo URL
+          console.log('Evidence photo URL:', evidencePhotoUrl);
+
+          return {
+            id: complaint.complaint_id,
+            complaintType: complaint.complaint_type,
+            submittedDate: complaint.created_at,
+            status: complaint.status,
+            description: complaint.description,
+            incidentLocation: complaint.location,
+            hasEvidence: complaint.has_evidence === '1',
+            evidencePhoto: evidencePhotoUrl,
+            comments: complaint.remarks ? [{
+              date: complaint.updated_at,
+              text: complaint.remarks,
+              author: 'Admin'
+            }] : []
+          };
+        });
         setComplaints(formattedComplaints);
         setFilteredComplaints(formattedComplaints);
 
@@ -343,12 +359,30 @@ export default function ComplaintTrackingPage() {
                   <Text style={styles.descriptionText}>{selectedComplaint.description}</Text>
                 </View>
 
-                {selectedComplaint.hasEvidence && (
+                {selectedComplaint.hasEvidence && selectedComplaint.evidencePhoto && (
                   <View style={styles.evidenceSection}>
-                    <Text style={styles.detailLabel}>Evidence Submitted:</Text>
-                    <View style={styles.evidencePlaceholder}>
-                      <Text style={styles.evidencePlaceholderText}>Evidence File Attached</Text>
-                    </View>
+                    <Text style={styles.detailLabel}>Evidence Photo:</Text>
+                    {!imageError ? (
+                      <Image
+                        source={{ uri: selectedComplaint.evidencePhoto }}
+                        style={styles.evidenceImage}
+                        resizeMode="cover"
+                        onError={() => {
+                          console.error('Error loading image:', selectedComplaint.evidencePhoto);
+                          setImageError(true);
+                        }}
+                      />
+                    ) : (
+                      <View style={styles.evidenceErrorContainer}>
+                        <Text style={styles.evidenceErrorText}>Failed to load image</Text>
+                        <TouchableOpacity
+                          style={styles.retryButton}
+                          onPress={() => setImageError(false)}
+                        >
+                          <Text style={styles.retryButtonText}>Retry</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -430,6 +464,7 @@ export default function ComplaintTrackingPage() {
           description: data.complaint.description,
           incidentLocation: data.complaint.location,
           hasEvidence: data.complaint.has_evidence === '1',
+          evidencePhoto: data.complaint.evidence_photo ? `${API_CONFIG.BASE_URL}/uploads/evidence_photos/${data.complaint.evidence_photo}` : undefined,
           comments: data.complaint.remarks ? [{
             date: data.complaint.updated_at,
             text: data.complaint.remarks,
@@ -1101,5 +1136,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: 'bold',
+  },
+  evidenceImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  evidenceErrorContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    marginTop: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  evidenceErrorText: {
+    color: '#666',
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: '#800000',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
