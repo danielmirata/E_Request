@@ -165,7 +165,15 @@ export default function BarangayDocumentRequestForm() {
       }
     } catch (error: any) {
       console.error('Error submitting document request:', error);
-      Alert.alert('Error', `Failed to submit document request: ${error.message}`);
+      if (error.message === 'Not authenticated') {
+        Alert.alert(
+          'Authentication Error',
+          'Please log in again to continue.',
+          [{ text: 'OK', onPress: () => router.push('/login') }]
+        );
+      } else {
+        Alert.alert('Error', `Failed to submit document request: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -105,6 +105,11 @@ export const documentsAPI = {
    */
   submitDocumentRequest: async (formData: FormData) => {
     try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS}`;
       console.log('Sending request to:', url);
 
@@ -113,6 +118,7 @@ export const documentsAPI = {
         body: formData,
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
           // Note: Don't set Content-Type when sending FormData
           // It will be set automatically with the correct boundary
         },
