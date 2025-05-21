@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { API_CONFIG } from '../api/config';
 import { documentsAPI } from '../api/documents';
 
 interface Document {
@@ -31,6 +32,7 @@ interface Document {
   location?: string;
   lastUpdate?: string;
   estimatedCompletion?: string;
+  idPhoto?: string;
   comments: Array<{
     date: string;
     text: string;
@@ -170,6 +172,7 @@ export default function DocumentsTrackingPage() {
           relatedTo: doc.document_type,
           fileSize: 'N/A',
           fileType: 'Document',
+          idPhoto: doc.id_photo ? `${API_CONFIG.BASE_URL}/uploads/${doc.id_photo}` : undefined,
           comments: doc.remarks ? [{
             date: doc.updated_at,
             text: doc.remarks,
@@ -340,33 +343,21 @@ export default function DocumentsTrackingPage() {
                   <Text style={styles.detailValue}>{selectedDocument.relatedTo}</Text>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>File Type:</Text>
-                  <Text style={styles.detailValue}>{selectedDocument.fileType}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>File Size:</Text>
-                  <Text style={styles.detailValue}>{selectedDocument.fileSize}</Text>
-                </View>
-
                 <View style={styles.descriptionBox}>
                   <Text style={styles.detailLabel}>Description:</Text>
                   <Text style={styles.descriptionText}>{selectedDocument.description}</Text>
                 </View>
-              </View>
 
-              <View style={styles.documentPreviewSection}>
-                <Text style={styles.sectionTitle}>Document Preview</Text>
-                <View style={styles.documentPreviewContainer}>
-                  <Text style={styles.documentPreviewText}>
-                    {selectedDocument.fileType === 'PDF' ? '📄' : '📁'}
-                    {' '}{selectedDocument.documentType} file
-                  </Text>
-                  <TouchableOpacity style={styles.previewButton}>
-                    <Text style={styles.previewButtonText}>View Document</Text>
-                  </TouchableOpacity>
-                </View>
+                {selectedDocument.idPhoto && (
+                  <View style={styles.idPhotoSection}>
+                    <Text style={styles.detailLabel}>ID Photo:</Text>
+                    <Image
+                      source={{ uri: selectedDocument.idPhoto }}
+                      style={styles.idPhoto}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
               </View>
 
               <View style={styles.detailSection}>
@@ -390,25 +381,6 @@ export default function DocumentsTrackingPage() {
                   </View>
                 ) : (
                   <Text style={styles.noUpdatesText}>No processing updates yet. Your document has been received and will be processed shortly.</Text>
-                )}
-              </View>
-
-              <View style={styles.actionsSection}>
-                <Text style={styles.sectionTitle}>Document Actions</Text>
-                <View style={styles.actionButtonsContainer}>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>Download Copy</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={[styles.actionButton, styles.secondaryActionButton]}>
-                    <Text style={styles.secondaryActionButtonText}>Share Document</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {selectedDocument.status === 'Needs Revision' && (
-                  <TouchableOpacity style={[styles.actionButton, styles.warningActionButton]}>
-                    <Text style={styles.actionButtonText}>Upload Revised Version</Text>
-                  </TouchableOpacity>
                 )}
               </View>
 
@@ -459,6 +431,7 @@ export default function DocumentsTrackingPage() {
           relatedTo: data.request.document_type,
           fileSize: 'N/A',
           fileType: 'Document',
+          idPhoto: data.request.id_photo ? `${API_CONFIG.BASE_URL}/uploads/${data.request.id_photo}` : undefined,
           comments: data.request.remarks ? [{
             date: data.request.updated_at,
             text: data.request.remarks,
@@ -949,34 +922,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 8,
   },
-  documentPreviewSection: {
-    marginBottom: 20,
-  },
-  documentPreviewContainer: {
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderStyle: 'dashed',
-  },
-  documentPreviewText: {
-    fontSize: 18,
-    marginBottom: 16,
-    color: '#555',
-  },
-  previewButton: {
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  previewButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
   timelineContainer: {
     marginTop: 8,
   },
@@ -1030,68 +975,6 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
-  },
-  actionsSection: {
-    marginBottom: 20,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  actionButton: {
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  actionButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  searchButtonDisabled: {
-    backgroundColor: '#cccccc',
-  },
-  resultCard: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  resultTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#800000',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  resultItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  resultLabel: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
-  },
-  resultText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  secondaryActionButton: {
-    backgroundColor: '#f5f5f5',
-  },
-  secondaryActionButtonText: {
-    color: '#333',
-    fontWeight: '600',
-  },
-  warningActionButton: {
-    backgroundColor: '#f44336',
-    marginTop: 10,
   },
   helpSection: {
     marginTop: 20,
@@ -1172,5 +1055,47 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  idPhotoSection: {
+    marginTop: 16,
+  },
+  idPhoto: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  resultCard: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  resultTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#800000',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  resultItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  resultLabel: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+  },
+  resultText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  searchButtonDisabled: {
+    backgroundColor: '#cccccc',
   },
 });
