@@ -29,7 +29,7 @@ export const documentsAPI = {
       formData.append('document_type', requestData.document_type);
       formData.append('purpose', requestData.purpose);
       formData.append('declaration_checked', requestData.declaration_checked.toString());
-      
+
       if (requestData.id_photo) {
         formData.append('id_photo', requestData.id_photo);
       }
@@ -96,5 +96,42 @@ export const documentsAPI = {
       console.error('Track request error:', error);
       throw new Error('Failed to track document request');
     }
-  }
+  },
+
+  /**
+   * Submit a new document request with form data
+   * @param formData - The document request form data
+   * @returns Promise with the response data
+   */
+  submitDocumentRequest: async (formData: FormData) => {
+    try {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS}`;
+      console.log('Sending request to:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          // Note: Don't set Content-Type when sending FormData
+          // It will be set automatically with the correct boundary
+        },
+      });
+
+      // Get raw text response for debugging
+      const rawText = await response.text();
+      console.log('Raw server response:', rawText);
+
+      // Try to parse the response as JSON
+      try {
+        return JSON.parse(rawText);
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        throw new Error('Server returned invalid JSON. Please check the server logs.');
+      }
+    } catch (error: any) {
+      console.error('API error in submitDocumentRequest:', error);
+      throw error;
+    }
+  },
 }; 

@@ -5,6 +5,7 @@ import { Link, router } from "expo-router";
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageBackground,
   KeyboardAvoidingView,
@@ -18,6 +19,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { documentsAPI } from '../api/documents';
 
 interface FormData {
   documentType: string;
@@ -84,14 +86,14 @@ export default function BarangayDocumentRequestForm() {
         alert('Sorry, we need camera roll permissions to upload an ID photo.');
         return;
       }
-  
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
       });
-  
+
       if (!result.canceled) {
         const pickedAsset = result.assets[0];
         setFormData({
@@ -114,14 +116,14 @@ export default function BarangayDocumentRequestForm() {
       'documentType', 'firstName', 'lastName', 'contactNumber', 'completeAddress',
       'dateNeeded', 'purposeOfRequest', 'idType'
     ];
-    
+
     const missingFields = requiredFields.filter(field => !formData[field]);
-    
+
     if (missingFields.length > 0 || !formData.isDeclarationChecked) {
-      alert('Please fill in all required fields and check the declaration.');
+      Alert.alert('Missing Information', 'Please fill in all required fields and check the declaration.');
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
@@ -150,44 +152,25 @@ export default function BarangayDocumentRequestForm() {
         } as any);
       }
 
-      const API_URL = 'http://192.168.1.14:8000/api/documents';
-      console.log('Sending request to:', API_URL);
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: formDataToSend,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      // Log the raw response for debugging
-      const rawText = await response.text();
-      console.log('Raw server response:', rawText);
-
-      // Try to parse the response as JSON
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (e) {
-        console.error('Failed to parse JSON:', e);
-        throw new Error('Server returned invalid JSON. Please check the server logs.');
-      }
+      const data = await documentsAPI.submitDocumentRequest(formDataToSend);
 
       if (data.status === 'success') {
-        alert('Document request submitted successfully!');
-        router.push('/service');
+        Alert.alert(
+          'Success',
+          'Document request submitted successfully!',
+          [{ text: 'OK', onPress: () => router.push('/service') }]
+        );
       } else {
-        alert('Failed to submit document request: ' + (data.message || 'Unknown error'));
+        Alert.alert('Error', 'Failed to submit document request: ' + (data.message || 'Unknown error'));
       }
     } catch (error: any) {
       console.error('Error submitting document request:', error);
-      alert(`Failed to submit document request: ${error.message}`);
+      Alert.alert('Error', `Failed to submit document request: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const documentTypes = [
     { label: 'Select Document Type', value: '' },
     { label: 'Barangay Clearance', value: 'Barangay Clearance' },
@@ -206,8 +189,8 @@ export default function BarangayDocumentRequestForm() {
   ];
 
   return (
-    <ImageBackground 
-      source={require('../assets/images/background.jpg')} 
+    <ImageBackground
+      source={require('../assets/images/background.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -220,14 +203,14 @@ export default function BarangayDocumentRequestForm() {
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.formContainer}>
               <View style={styles.logoContainer}>
-                <Image 
-                  source={require('../assets/images/logo.png')} 
-                  style={styles.logo} 
+                <Image
+                  source={require('../assets/images/logo.png')}
+                  style={styles.logo}
                   resizeMode="contain"
                 />
                 <Text style={styles.formTitle}>Barangay Document Request Form</Text>
               </View>
-              
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Document Type *</Text>
                 <View style={styles.pickerContainer}>
@@ -238,16 +221,16 @@ export default function BarangayDocumentRequestForm() {
                     itemStyle={{ fontSize: 14, height: 120 }}
                   >
                     {documentTypes.map((item, index) => (
-                      <Picker.Item 
-                        key={index} 
-                        label={item.label} 
+                      <Picker.Item
+                        key={index}
+                        label={item.label}
                         value={item.value}
                       />
                     ))}
                   </Picker>
                 </View>
               </View>
-              
+
               <View style={styles.rowContainer}>
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>First Name *</Text>
@@ -259,7 +242,7 @@ export default function BarangayDocumentRequestForm() {
                     placeholderTextColor="#888"
                   />
                 </View>
-                
+
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>Last Name *</Text>
                   <TextInput
@@ -271,7 +254,7 @@ export default function BarangayDocumentRequestForm() {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.rowContainer}>
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>Contact Number *</Text>
@@ -284,7 +267,7 @@ export default function BarangayDocumentRequestForm() {
                     keyboardType="phone-pad"
                   />
                 </View>
-                
+
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>Email Address</Text>
                   <TextInput
@@ -298,7 +281,7 @@ export default function BarangayDocumentRequestForm() {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Complete Address *</Text>
                 <TextInput
@@ -310,11 +293,11 @@ export default function BarangayDocumentRequestForm() {
                   multiline
                 />
               </View>
-              
+
               <View style={styles.rowContainer}>
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>Date Needed *</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.datePickerButton}
                     onPress={() => setShowDatePicker(true)}
                   >
@@ -330,7 +313,7 @@ export default function BarangayDocumentRequestForm() {
                     />
                   )}
                 </View>
-                
+
                 <View style={[styles.inputContainer, styles.halfWidth]}>
                   <Text style={styles.inputLabel}>Purpose of Request *</Text>
                   <TextInput
@@ -342,7 +325,7 @@ export default function BarangayDocumentRequestForm() {
                   />
                 </View>
               </View>
-              
+
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Additional Notes</Text>
                 <TextInput
@@ -355,10 +338,10 @@ export default function BarangayDocumentRequestForm() {
                   numberOfLines={4}
                 />
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>ID Verification</Text>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Valid ID Type *</Text>
                   <View style={styles.pickerContainer}>
@@ -369,19 +352,19 @@ export default function BarangayDocumentRequestForm() {
                       itemStyle={{ fontSize: 14, height: 120 }}
                     >
                       {idTypes.map((item, index) => (
-                        <Picker.Item 
-                          key={index} 
-                          label={item.label} 
+                        <Picker.Item
+                          key={index}
+                          label={item.label}
                           value={item.value}
                         />
                       ))}
                     </Picker>
                   </View>
                 </View>
-                
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Upload ID Photo *</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.uploadButton}
                     onPress={handleDocumentPick}
                   >
@@ -391,10 +374,10 @@ export default function BarangayDocumentRequestForm() {
                   </TouchableOpacity>
                 </View>
               </View>
-              
+
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Declaration</Text>
-                
+
                 <View style={styles.checkboxContainer}>
                   <TouchableOpacity
                     style={[
@@ -410,18 +393,18 @@ export default function BarangayDocumentRequestForm() {
                   </Text>
                 </View>
               </View>
-              
+
               <View style={styles.buttonContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
                   onPress={() => router.push('/service')}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[
-                    styles.button, 
+                    styles.button,
                     styles.submitButton,
                     (!formData.documentType || !formData.firstName || !formData.isDeclarationChecked) && styles.submitButtonDisabled
                   ]}
