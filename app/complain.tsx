@@ -189,7 +189,15 @@ export default function BarangayComplaintForm() {
       }
     } catch (error: any) {
       console.error('Error submitting complaint:', error);
-      Alert.alert('Error', `Failed to submit complaint: ${error.message}`);
+      if (error.message === 'Not authenticated') {
+        Alert.alert(
+          'Authentication Error',
+          'Please log in again to continue.',
+          [{ text: 'OK', onPress: () => router.push('/login') }]
+        );
+      } else {
+        Alert.alert('Error', `Failed to submit complaint: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }

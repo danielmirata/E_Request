@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from './config';
 
 export const complaintsApi = {
@@ -8,6 +9,11 @@ export const complaintsApi = {
    */
   submitComplaint: async (formData: FormData) => {
     try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPLAINTS}`;
       console.log('Sending request to:', url);
 
@@ -16,6 +22,7 @@ export const complaintsApi = {
         body: formData,
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
           // Note: Don't set Content-Type when sending FormData
           // It will be set automatically with the correct boundary
         },
