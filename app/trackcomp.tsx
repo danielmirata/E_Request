@@ -1,4 +1,5 @@
-import { Link } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Link, useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +18,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { API_CONFIG } from '../api/config';
 
 // Mock data for demonstration
 const MOCK_COMPLAINTS = [
@@ -119,14 +121,20 @@ export default function ComplaintTrackingPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [trackingResult, setTrackingResult] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const fetchComplaints = async () => {
     try {
-      const response = await fetch('http://192.168.1.14/CANTIL_ESYSTEM2.0/public/api/complaints', {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPLAINTS}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -155,16 +163,24 @@ export default function ComplaintTrackingPage() {
         }));
         setComplaints(formattedComplaints);
         setFilteredComplaints(formattedComplaints);
-        
+
         if (formattedComplaints.length === 0) {
           Alert.alert('Info', 'No complaints found');
         }
       } else {
         Alert.alert('Error', data.message || 'Failed to fetch complaints');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching complaints:', error);
-      Alert.alert('Error', 'Failed to fetch complaints. Please check your connection and try again.');
+      if (error.message === 'Not authenticated') {
+        Alert.alert(
+          'Authentication Error',
+          'Please log in again to continue.',
+          [{ text: 'OK', onPress: () => router.push('/login') }]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to fetch complaints. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +200,7 @@ export default function ComplaintTrackingPage() {
 
   const handleFilter = (filterType: string) => {
     setActiveFilter(filterType);
-    
+
     if (filterType === 'All') {
       setFilteredComplaints(complaints);
     } else {
@@ -199,12 +215,12 @@ export default function ComplaintTrackingPage() {
   };
 
   const formatDate = (dateString: string): string => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
@@ -220,18 +236,18 @@ export default function ComplaintTrackingPage() {
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
       </View>
-      
+
       <View style={styles.complaintInfo}>
         <Text style={styles.complaintType}>{item.complaintType}</Text>
         <Text style={styles.complaintDate}>Submitted: {formatDate(item.submittedDate)}</Text>
-        <Text 
+        <Text
           style={styles.complaintDescription}
           numberOfLines={2}
         >
           {item.description}
         </Text>
       </View>
-      
+
       <View style={styles.complaintFooter}>
         <Text style={styles.commentsCount}>
           {item.comments.length} {item.comments.length === 1 ? 'update' : 'updates'}
@@ -256,7 +272,7 @@ export default function ComplaintTrackingPage() {
       ]}
       onPress={() => handleFilter(label)}
     >
-      <Text 
+      <Text
         style={[
           styles.filterButtonText,
           activeFilter === label && styles.activeFilterText
@@ -269,7 +285,7 @@ export default function ComplaintTrackingPage() {
 
   const ComplaintDetailModal = () => {
     if (!selectedComplaint) return null;
-    
+
     return (
       <Modal
         animationType="slide"
@@ -281,21 +297,21 @@ export default function ComplaintTrackingPage() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Complaint Details</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setDetailModalVisible(false)}
               >
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView style={styles.modalScrollView}>
               <View style={styles.detailSection}>
                 <View style={styles.detailHeader}>
                   <Text style={styles.detailHeaderText}>Reference Number</Text>
                   <Text style={styles.detailHeaderValue}>{selectedComplaint.id}</Text>
                 </View>
-                
+
                 <View style={[styles.statusRow, { backgroundColor: getStatusColor(selectedComplaint.status) + '20' }]}>
                   <Text style={styles.statusLabel}>Current Status:</Text>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedComplaint.status) }]}>
@@ -303,30 +319,30 @@ export default function ComplaintTrackingPage() {
                   </View>
                 </View>
               </View>
-              
+
               <View style={styles.detailSection}>
                 <Text style={styles.sectionTitle}>Complaint Information</Text>
-                
+
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Type:</Text>
                   <Text style={styles.detailValue}>{selectedComplaint.complaintType}</Text>
                 </View>
-                
+
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Date Submitted:</Text>
                   <Text style={styles.detailValue}>{formatDate(selectedComplaint.submittedDate)}</Text>
                 </View>
-                
+
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Location:</Text>
                   <Text style={styles.detailValue}>{selectedComplaint.incidentLocation}</Text>
                 </View>
-                
+
                 <View style={styles.descriptionBox}>
                   <Text style={styles.detailLabel}>Description:</Text>
                   <Text style={styles.descriptionText}>{selectedComplaint.description}</Text>
                 </View>
-                
+
                 {selectedComplaint.hasEvidence && (
                   <View style={styles.evidenceSection}>
                     <Text style={styles.detailLabel}>Evidence Submitted:</Text>
@@ -336,10 +352,10 @@ export default function ComplaintTrackingPage() {
                   </View>
                 )}
               </View>
-              
+
               <View style={styles.detailSection}>
                 <Text style={styles.sectionTitle}>Case Updates</Text>
-                
+
                 {selectedComplaint.comments.length > 0 ? (
                   <View style={styles.timelineContainer}>
                     {selectedComplaint.comments.map((comment, index) => (
@@ -360,10 +376,10 @@ export default function ComplaintTrackingPage() {
                   <Text style={styles.noUpdatesText}>No updates yet. Your complaint has been received and will be processed shortly.</Text>
                 )}
               </View>
-              
+
               <View style={styles.helpSection}>
                 <Text style={styles.helpText}>Need help or have questions about your complaint?</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.helpButton}
                   onPress={() => {
                     setDetailModalVisible(false);
@@ -433,8 +449,8 @@ export default function ComplaintTrackingPage() {
   };
 
   return (
-    <ImageBackground 
-      source={require('../assets/images/background.jpg')} 
+    <ImageBackground
+      source={require('../assets/images/background.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -442,24 +458,24 @@ export default function ComplaintTrackingPage() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Image 
-              source={require('../assets/images/logo.png')} 
-              style={styles.logo} 
+            <Image
+              source={require('../assets/images/logo.png')}
+              style={styles.logo}
               resizeMode="contain"
             />
             <Text style={styles.pageTitle}>My Complaints</Text>
           </View>
-          
+
           <Link href="/complain" asChild>
             <TouchableOpacity style={styles.newComplaintButton}>
               <Text style={styles.newComplaintText}>+ New Complaint</Text>
             </TouchableOpacity>
           </Link>
         </View>
-        
+
         <View style={styles.filterContainer}>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersScrollView}
           >
@@ -472,7 +488,7 @@ export default function ComplaintTrackingPage() {
             {renderFilterButton('Rejected')}
           </ScrollView>
         </View>
-        
+
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#800000" />
@@ -487,12 +503,12 @@ export default function ComplaintTrackingPage() {
                 </View>
                 <Text style={styles.emptyTitle}>No complaints found</Text>
                 <Text style={styles.emptyText}>
-                  {activeFilter === 'All' 
-                    ? "You haven't submitted any complaints yet." 
+                  {activeFilter === 'All'
+                    ? "You haven't submitted any complaints yet."
                     : `You don't have any complaints with '${activeFilter}' status.`}
                 </Text>
                 {activeFilter !== 'All' && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.viewAllButton}
                     onPress={() => handleFilter('All')}
                   >
@@ -508,8 +524,8 @@ export default function ComplaintTrackingPage() {
                 contentContainerStyle={styles.complaintsList}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                  <RefreshControl 
-                    refreshing={refreshing} 
+                  <RefreshControl
+                    refreshing={refreshing}
                     onRefresh={onRefresh}
                     colors={['#800000']}
                   />
@@ -518,7 +534,7 @@ export default function ComplaintTrackingPage() {
             )}
           </>
         )}
-        
+
         <View style={styles.footer}>
           <Link href="/service" asChild>
             <TouchableOpacity style={styles.footerButton}>
@@ -526,7 +542,7 @@ export default function ComplaintTrackingPage() {
             </TouchableOpacity>
           </Link>
         </View>
-        
+
         <ComplaintDetailModal />
 
         <View style={styles.trackingContainer}>
@@ -539,7 +555,7 @@ export default function ComplaintTrackingPage() {
               onChangeText={setTrackingNumber}
               placeholderTextColor="#999"
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.searchButton, loading && styles.searchButtonDisabled]}
               onPress={handleTrackComplaint}
               disabled={loading}
@@ -814,7 +830,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  
+
   // Modal styles
   modalContainer: {
     flex: 1,
