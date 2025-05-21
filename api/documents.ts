@@ -9,9 +9,29 @@ interface DocumentRequest {
 }
 
 interface DocumentResponse {
-  success: boolean;
-  message?: string;
-  data?: any;
+  status: string;
+  message: string;
+  data: Array<{
+    id: number;
+    request_id: string;
+    user_id: number;
+    document_type: string;
+    first_name: string;
+    last_name: string;
+    contact_number: string;
+    email: string;
+    address: string;
+    date_needed: string;
+    purpose: string;
+    notes: string;
+    id_type: string;
+    id_photo: string;
+    declaration: number;
+    status: string;
+    remarks: string | null;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 export const documentsAPI = {
@@ -59,16 +79,33 @@ export const documentsAPI = {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS}`, {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MY_REQUESTS}`;
+      console.log('Fetching documents from:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
-      return await response.json();
-    } catch (error) {
-      console.error('Get requests error:', error);
-      throw new Error('Failed to fetch document requests');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+
+        if (response.status === 401) {
+          throw new Error('Not authenticated');
+        }
+        throw new Error(`Failed to fetch document requests: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      return data;
+    } catch (error: any) {
+      console.error('API error in getMyRequests:', error);
+      throw error;
     }
   },
 

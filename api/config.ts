@@ -7,6 +7,7 @@ export const API_CONFIG = {
         REGISTER: '/api/register',
         USER: '/api/user',
         DOCUMENTS: '/api/documents',
+        MY_REQUESTS: '/api/my-requests', // Added my-requests endpoint
         TRACKING: '/api/tracking',
         LOGOUT: '/api/logout',
         COMPLAINTS: '/api/complaints' // Added complaints endpoint
