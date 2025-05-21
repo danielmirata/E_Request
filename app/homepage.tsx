@@ -1,41 +1,75 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image, 
-  ImageBackground,
-  StatusBar,
-  SafeAreaView
-} from 'react-native';
-import { Link } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
+import { Link } from "expo-router";
+import React, { useState } from 'react';
+import {
+  Animated,
+  Image,
+  ImageBackground,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 const HomePage = () => {
   // Using a hardcoded default value and useState instead of getting data from a backend
   const [userName] = useState("DANIEL");
-  
+  const [showHeader, setShowHeader] = useState(false);
+  const [headerHeight] = useState(new Animated.Value(0));
+
+  const toggleHeader = () => {
+    setShowHeader(!showHeader);
+    Animated.timing(headerHeight, {
+      toValue: showHeader ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
   return (
-    <ImageBackground 
-      source={require('../assets/images/background.jpg')} 
+    <ImageBackground
+      source={require('../assets/images/background.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <Animated.View style={[
+          styles.header,
+          {
+            height: headerHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 60]
+            }),
+            opacity: headerHeight
+          }
+        ]}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Cantil E-System</Text>
+            <TouchableOpacity onPress={toggleHeader} style={styles.headerCloseButton}>
+              <Ionicons name="close" size={24} color="#800000" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
         <View style={styles.container}>
           {/* Logo Section */}
           <View style={styles.logoContainer}>
-            <Image 
-              source={require('../assets/images/logo.png')} 
+            <TouchableOpacity onPress={toggleHeader} style={styles.menuButton}>
+              <Ionicons name="menu" size={32} color="#800000" />
+            </TouchableOpacity>
+            <Image
+              source={require('../assets/images/logo.png')}
               style={styles.mainLogo}
               resizeMode="contain"
             />
             <Text style={styles.welcomeText}>WELCOME, {userName}</Text>
             <Text style={styles.subText}>What would you like to do?</Text>
           </View>
-          
+
           {/* Menu Cards */}
           <View style={styles.cardContainer}>
             {/* Services */}
@@ -47,7 +81,7 @@ const HomePage = () => {
                 <Text style={styles.cardText}>SERVICES</Text>
               </TouchableOpacity>
             </Link>
-            
+
             {/* Documents */}
             <Link href="/document" asChild>
               <TouchableOpacity style={styles.card}>
@@ -57,7 +91,7 @@ const HomePage = () => {
                 <Text style={styles.cardText}>DOCUMENTS</Text>
               </TouchableOpacity>
             </Link>
-            
+
             {/* Profile */}
             <Link href="/service" asChild>
               <TouchableOpacity style={styles.card}>
@@ -67,7 +101,7 @@ const HomePage = () => {
                 <Text style={styles.cardText}>PROFILE</Text>
               </TouchableOpacity>
             </Link>
-            
+
             {/* About Us */}
             <Link href="/service" asChild>
               <TouchableOpacity style={styles.card}>
@@ -78,8 +112,8 @@ const HomePage = () => {
               </TouchableOpacity>
             </Link>
           </View>
-          
-         
+
+
         </View>
       </SafeAreaView>
     </ImageBackground>
@@ -93,7 +127,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  container: { 
+  container: {
     flex: 1,
     justifyContent: "center",
     padding: 24,
@@ -166,7 +200,38 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     fontSize: 12,
-  }
+  },
+  header: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    overflow: 'hidden',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    height: 60,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#800000',
+  },
+  headerCloseButton: {
+    padding: 8,
+  },
+  menuButton: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    padding: 8,
+    zIndex: 1,
+  },
 });
 
 export default HomePage;

@@ -42,29 +42,29 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <Stack>
-        <Stack.Screen name="index" 
+        <Stack.Screen name="index"
           options={{
             headerTitle: "Home"
-          }} 
+          }}
         />
-        <Stack.Screen name="login" 
+        <Stack.Screen name="login"
           options={{
             headerTitle: "Login"
           }}
         />
-        <Stack.Screen name="signup" 
+        <Stack.Screen name="signup"
           options={{
             headerTitle: "Sign Up"
           }}
         />
-        <Stack.Screen name="service" 
+        <Stack.Screen name="service"
           options={{
             headerTitle: "Service"
           }}
         />
         <Stack.Screen name="homepage"
           options={{
-            headerTitle: "Home Page"
+            headerShown: false
           }}
         />
         <Stack.Screen name="document"
