@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -76,6 +77,8 @@ export default function Profile() {
     const handleLogout = async () => {
         try {
             await signOut();
+            // Navigate to index after successful logout
+            router.replace('/');
         } catch (error) {
             console.error('Logout error:', error);
             Alert.alert('Error', 'Failed to logout');
