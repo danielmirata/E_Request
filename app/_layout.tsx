@@ -49,12 +49,12 @@ export default function RootLayout() {
         />
         <Stack.Screen name="login"
           options={{
-            headerTitle: "Login"
+            headerShown: false
           }}
         />
         <Stack.Screen name="signup"
           options={{
-            headerTitle: "Sign Up"
+            headerShown: false
           }}
         />
         <Stack.Screen name="service"
