@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { authAPI } from '../api/auth';
 import ErrorBoundary from '../components/ErrorBoundary';
 import LoadingScreen from '../components/LoadingScreen';
+import { AuthProvider } from '../context/AuthContext';
 
 // This is the main layout of the app
 // It wraps your pages with the providers they need
@@ -40,59 +41,66 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <Stack>
-        <Stack.Screen name="index"
-          options={{
-            headerTitle: "Home"
-          }}
-        />
-        <Stack.Screen name="login"
-          options={{
-            headerShown: false
-          }}
-        />
-        <Stack.Screen name="signup"
-          options={{
-            headerShown: false
-          }}
-        />
-        <Stack.Screen name="service"
-          options={{
-            headerTitle: "Service"
-          }}
-        />
-        <Stack.Screen name="homepage"
-          options={{
-            headerShown: false
-          }}
-        />
-        <Stack.Screen name="document"
-          options={{
-            headerTitle: "Document"
-          }}
-        />
-        <Stack.Screen name="request"
-          options={{
-            headerTitle: "Request"
-          }}
-        />
-        <Stack.Screen name="complain"
-          options={{
-            headerTitle: "Complain"
-          }}
-        />
-        <Stack.Screen name="trackdocs"
-          options={{
-            headerTitle: "TrackDocs"
-          }}
-        />
-        <Stack.Screen name="trackcomp"
-          options={{
-            headerTitle: "TrackComplain"
-          }}
-        />
-      </Stack>
-    </ErrorBoundary>
+    <AuthProvider>
+      <ErrorBoundary>
+        <Stack>
+          <Stack.Screen name="index"
+            options={{
+              headerTitle: "Home"
+            }}
+          />
+          <Stack.Screen name="login"
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen name="signup"
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen name="service"
+            options={{
+              headerTitle: "Service"
+            }}
+          />
+          <Stack.Screen name="homepage"
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen name="document"
+            options={{
+              headerTitle: "Document"
+            }}
+          />
+          <Stack.Screen name="request"
+            options={{
+              headerTitle: "Request"
+            }}
+          />
+          <Stack.Screen name="complain"
+            options={{
+              headerTitle: "Complain"
+            }}
+          />
+          <Stack.Screen name="trackdocs"
+            options={{
+              headerTitle: "TrackDocs"
+            }}
+          />
+          <Stack.Screen name="trackcomp"
+            options={{
+              headerTitle: "TrackComplain"
+            }}
+          />
+          <Stack.Screen name="profile"
+            options={{
+              headerTitle: "Profile"
+            }}
+          />
+        </Stack>
+      </ErrorBoundary>
+    </AuthProvider>
   );
 }

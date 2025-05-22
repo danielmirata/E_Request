@@ -10,7 +10,8 @@ export const API_CONFIG = {
         MY_REQUESTS: '/api/my-requests', // Added my-requests endpoint
         TRACKING: '/api/tracking',
         LOGOUT: '/api/logout',
-        COMPLAINTS: '/api/complaints' // Added complaints endpoint
+        COMPLAINTS: '/api/complaints', // Added complaints endpoint
+        PROFILE: '/api/profile' // Added profile endpoint
     },
     // Request Timeout (in milliseconds)
     TIMEOUT: 10000,
