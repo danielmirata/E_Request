@@ -103,7 +103,7 @@ const HomePage = () => {
             </Link>
 
             {/* About Us */}
-            <Link href="/service" asChild>
+            <Link href="/about" asChild>
               <TouchableOpacity style={styles.card}>
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="information-circle-outline" size={32} color="#800000" />

@@ -99,6 +99,11 @@ export default function RootLayout() {
               headerTitle: "Profile"
             }}
           />
+          <Stack.Screen name="about"
+            options={{
+              headerTitle: "About Us"
+            }}
+          />
         </Stack>
       </ErrorBoundary>
     </AuthProvider>
