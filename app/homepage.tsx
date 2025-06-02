@@ -92,6 +92,16 @@ const HomePage = () => {
               </TouchableOpacity>
             </Link>
 
+            {/* Barangay Map */}
+            <Link href="/map" asChild>
+              <TouchableOpacity style={styles.card}>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="map-outline" size={32} color="#800000" />
+                </View>
+                <Text style={styles.cardText}>BARANGAY MAP</Text>
+              </TouchableOpacity>
+            </Link>
+
             {/* Profile */}
             <Link href="/profile" asChild>
               <TouchableOpacity style={styles.card}>

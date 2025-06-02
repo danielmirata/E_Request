@@ -88,18 +88,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmt = $conn->prepare("
             INSERT INTO resident_document_requests (
-                user_id, document_type, first_name, last_name,
+                user_id, document_type, fullname,
                 contact_number, email, address, date_needed,
                 purpose, notes, id_type, id_photo, declaration,
                 status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $data['user_id'] ?? null,
             $data['document_type'],
-            $data['first_name'],
-            $data['last_name'],
+            $data['fullname'],
             $data['contact_number'],
             $data['email'] ?? null,
             $data['address'],

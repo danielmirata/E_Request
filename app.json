@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/cantil.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.danielmirata.CantilE"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "970d9fa9-8223-4a5d-8538-0206b8e1347b"
+      }
     }
   }
 }

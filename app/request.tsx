@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, router } from "expo-router";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,14 +20,15 @@ import {
   View
 } from 'react-native';
 import { documentsAPI } from '../api/documents';
+import { profileAPI } from '../api/profile';
+import { useAuth } from '../context/AuthContext';
 
 interface FormData {
   documentType: string;
-  firstName: string;
-  lastName: string;
+  fullname: string;
   contactNumber: string;
   emailAddress: string;
-  completeAddress: string;
+  purok: string;
   dateNeeded: Date;
   purposeOfRequest: string;
   additionalNotes: string;
@@ -41,13 +42,14 @@ interface FormData {
 }
 
 export default function BarangayDocumentRequestForm() {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     documentType: '',
-    firstName: '',
-    lastName: '',
+    fullname: '',
     contactNumber: '',
     emailAddress: '',
-    completeAddress: '',
+    purok: '',
     dateNeeded: new Date(),
     purposeOfRequest: '',
     additionalNotes: '',
@@ -57,7 +59,26 @@ export default function BarangayDocumentRequestForm() {
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await profileAPI.getProfile();
+        if (response.status === 'success' && response.data?.user) {
+          const userData = response.data.user;
+          setFormData(prev => ({
+            ...prev,
+            fullname: userData.fullname || '',
+            emailAddress: userData.email || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleInputChange = (field: keyof FormData, value: FormData[keyof FormData]) => {
     setFormData({
@@ -113,7 +134,7 @@ export default function BarangayDocumentRequestForm() {
 
   const handleSubmit = async () => {
     const requiredFields: (keyof FormData)[] = [
-      'documentType', 'firstName', 'lastName', 'contactNumber', 'completeAddress',
+      'documentType', 'fullname', 'contactNumber', 'purok',
       'dateNeeded', 'purposeOfRequest', 'idType'
     ];
 
@@ -131,11 +152,10 @@ export default function BarangayDocumentRequestForm() {
 
       // Add each field as a separate key
       formDataToSend.append('document_type', formData.documentType);
-      formDataToSend.append('first_name', formData.firstName);
-      formDataToSend.append('last_name', formData.lastName);
+      formDataToSend.append('fullname', formData.fullname);
       formDataToSend.append('contact_number', formData.contactNumber);
       formDataToSend.append('email', formData.emailAddress);
-      formDataToSend.append('address', formData.completeAddress);
+      formDataToSend.append('purok', formData.purok);
       // Format date as YYYY-MM-DD
       formDataToSend.append('date_needed', formData.dateNeeded.toISOString().split('T')[0]);
       formDataToSend.append('purpose', formData.purposeOfRequest);
@@ -193,7 +213,22 @@ export default function BarangayDocumentRequestForm() {
     { label: 'Passport', value: 'passport' },
     { label: 'Voter\'s ID', value: 'voters_id' },
     { label: 'SSS ID', value: 'sss_id' },
-    { label: 'Postal ID', value: 'postal_id' }
+    { label: 'Postal ID', value: 'postal_id' },
+    { label: 'School ID', value: 'school_id' }
+  ];
+
+  const purokOptions = [
+    { label: 'Select Purok/Street', value: '' },
+    { label: 'Mapahiyumon', value: 'Mapahiyumon' },
+    { label: 'Mauswagon', value: 'Mauswagon' },
+    { label: 'Madasigon', value: 'Madasigon' },
+    { label: 'Matinabangon', value: 'Matinabangon' },
+    { label: 'Twin Heart', value: 'Twin Heart' },
+    { label: 'Malipayon', value: 'Malipayon' },
+    { label: 'Makugihon', value: 'Makugihon' },
+    { label: 'Maalagaron', value: 'Maalagaron' },
+    { label: 'Matinagdanon', value: 'Matinagdanon' },
+    { label: 'Maabi-abihon', value: 'Maabi-abihon' }
   ];
 
   return (
@@ -239,28 +274,15 @@ export default function BarangayDocumentRequestForm() {
                 </View>
               </View>
 
-              <View style={styles.rowContainer}>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>First Name *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.firstName}
-                    onChangeText={(value) => handleInputChange('firstName', value)}
-                    placeholder="Enter first name"
-                    placeholderTextColor="#888"
-                  />
-                </View>
-
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>Last Name *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.lastName}
-                    onChangeText={(value) => handleInputChange('lastName', value)}
-                    placeholder="Enter last name"
-                    placeholderTextColor="#888"
-                  />
-                </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.fullname}
+                  onChangeText={(value) => handleInputChange('fullname', value)}
+                  placeholder="Enter full name"
+                  placeholderTextColor="#888"
+                />
               </View>
 
               <View style={styles.rowContainer}>
@@ -291,15 +313,23 @@ export default function BarangayDocumentRequestForm() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Complete Address *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.completeAddress}
-                  onChangeText={(value) => handleInputChange('completeAddress', value)}
-                  placeholder="Enter complete address"
-                  placeholderTextColor="#888"
-                  multiline
-                />
+                <Text style={styles.inputLabel}>Purok/Street *</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={formData.purok}
+                    onValueChange={(value) => handleInputChange('purok', value)}
+                    style={styles.picker}
+                    itemStyle={{ fontSize: 14, height: 120 }}
+                  >
+                    {purokOptions.map((item, index) => (
+                      <Picker.Item
+                        key={index}
+                        label={item.label}
+                        value={item.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
               </View>
 
               <View style={styles.rowContainer}>
@@ -414,7 +444,7 @@ export default function BarangayDocumentRequestForm() {
                   style={[
                     styles.button,
                     styles.submitButton,
-                    (!formData.documentType || !formData.firstName || !formData.isDeclarationChecked) && styles.submitButtonDisabled
+                    (!formData.documentType || !formData.fullname || !formData.isDeclarationChecked) && styles.submitButtonDisabled
                   ]}
                   onPress={handleSubmit}
                   disabled={isLoading}

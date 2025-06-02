@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, router } from "expo-router";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,13 +20,16 @@ import {
   View
 } from 'react-native';
 import { complaintsApi } from '../api/complaints';
+import { profileAPI } from '../api/profile';
+import { useAuth } from '../context/AuthContext';
 
 interface ComplaintData {
-  firstName: string;
-  lastName: string;
+  fullname: string;
   contactNumber: string;
   email: string;
-  complainantAddress: string;
+  purok: string;
+  complaineeName: string;
+  complaineeAddress: string;
   complaintType: string;
   incidentDate: Date;
   incidentTime: Date;
@@ -41,12 +44,14 @@ interface ComplaintData {
 }
 
 export default function BarangayComplaintForm() {
+  const { user } = useAuth();
   const [complaintData, setComplaintData] = useState<ComplaintData>({
-    firstName: '',
-    lastName: '',
+    fullname: '',
     contactNumber: '',
     email: '',
-    complainantAddress: '',
+    purok: '',
+    complaineeName: '',
+    complaineeAddress: '',
     complaintType: '',
     incidentDate: new Date(),
     incidentTime: new Date(),
@@ -59,6 +64,26 @@ export default function BarangayComplaintForm() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await profileAPI.getProfile();
+        if (response.status === 'success' && response.data?.user) {
+          const userData = response.data.user;
+          setComplaintData(prev => ({
+            ...prev,
+            fullname: userData.fullname || '',
+            email: userData.email || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleInputChange = (field: keyof ComplaintData, value: ComplaintData[keyof ComplaintData]) => {
     setComplaintData({
@@ -127,10 +152,9 @@ export default function BarangayComplaintForm() {
 
   const handleSubmit = async () => {
     const requiredFields: (keyof ComplaintData)[] = [
-      'firstName',
-      'lastName',
+      'fullname',
       'contactNumber',
-      'complainantAddress',
+      'purok',
       'complaintType',
       'incidentDate',
       'incidentLocation',
@@ -153,11 +177,12 @@ export default function BarangayComplaintForm() {
       const formDataToSend = new FormData();
 
       // Add each field as a separate key
-      formDataToSend.append('first_name', complaintData.firstName);
-      formDataToSend.append('last_name', complaintData.lastName);
+      formDataToSend.append('fullname', complaintData.fullname);
       formDataToSend.append('contact_number', complaintData.contactNumber);
       formDataToSend.append('email', complaintData.email);
-      formDataToSend.append('complete_address', complaintData.complainantAddress);
+      formDataToSend.append('purok', complaintData.purok);
+      formDataToSend.append('complainee_name', complaintData.complaineeName);
+      formDataToSend.append('complainee_address', complaintData.complaineeAddress);
       formDataToSend.append('complaint_type', complaintData.complaintType);
       // Format date as YYYY-MM-DD
       formDataToSend.append('incident_date', complaintData.incidentDate.toISOString().split('T')[0]);
@@ -215,6 +240,20 @@ export default function BarangayComplaintForm() {
     { label: 'Others', value: 'others' }
   ];
 
+  const purokOptions = [
+    { label: 'Select Purok/Street', value: '' },
+    { label: 'Mapahiyumon', value: 'Mapahiyumon' },
+    { label: 'Mauswagon', value: 'Mauswagon' },
+    { label: 'Madasigon', value: 'Madasigon' },
+    { label: 'Matinabangon', value: 'Matinabangon' },
+    { label: 'Twin Heart', value: 'Twin Heart' },
+    { label: 'Malipayon', value: 'Malipayon' },
+    { label: 'Makugihon', value: 'Makugihon' },
+    { label: 'Maalagaron', value: 'Maalagaron' },
+    { label: 'Matinagdanon', value: 'Matinagdanon' },
+    { label: 'Maabi-abihon', value: 'Maabi-abihon' }
+  ];
+
   return (
     <ImageBackground
       source={require('../assets/images/background.jpg')}
@@ -241,28 +280,15 @@ export default function BarangayComplaintForm() {
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Complainant Information</Text>
 
-                <View style={styles.rowContainer}>
-                  <View style={[styles.inputContainer, styles.halfWidth]}>
-                    <Text style={styles.inputLabel}>First Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={complaintData.firstName}
-                      onChangeText={(value) => handleInputChange('firstName', value)}
-                      placeholder="Enter first name"
-                      placeholderTextColor="#888"
-                    />
-                  </View>
-
-                  <View style={[styles.inputContainer, styles.halfWidth]}>
-                    <Text style={styles.inputLabel}>Last Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={complaintData.lastName}
-                      onChangeText={(value) => handleInputChange('lastName', value)}
-                      placeholder="Enter last name"
-                      placeholderTextColor="#888"
-                    />
-                  </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Full Name *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={complaintData.fullname}
+                    onChangeText={(value) => handleInputChange('fullname', value)}
+                    placeholder="Enter full name"
+                    placeholderTextColor="#888"
+                  />
                 </View>
 
                 <View style={styles.rowContainer}>
@@ -293,15 +319,58 @@ export default function BarangayComplaintForm() {
                 </View>
 
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Complete Address *</Text>
+                  <Text style={styles.inputLabel}>Purok/Street *</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={complaintData.purok}
+                      onValueChange={(value) => handleInputChange('purok', value)}
+                      style={styles.picker}
+                      itemStyle={{ fontSize: 14, height: 120 }}
+                    >
+                      {purokOptions.map((item, index) => (
+                        <Picker.Item
+                          key={index}
+                          label={item.label}
+                          value={item.value}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Complainee Information</Text>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Full Name</Text>
                   <TextInput
                     style={styles.input}
-                    value={complaintData.complainantAddress}
-                    onChangeText={(value) => handleInputChange('complainantAddress', value)}
-                    placeholder="Enter your complete address"
+                    value={complaintData.complaineeName}
+                    onChangeText={(value) => handleInputChange('complaineeName', value)}
+                    placeholder="Enter complainee's full name"
                     placeholderTextColor="#888"
-                    multiline
                   />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Purok/Street</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={complaintData.complaineeAddress}
+                      onValueChange={(value) => handleInputChange('complaineeAddress', value)}
+                      style={styles.picker}
+                      itemStyle={{ fontSize: 14, height: 120 }}
+                    >
+                      {purokOptions.map((item, index) => (
+                        <Picker.Item
+                          key={index}
+                          label={item.label}
+                          value={item.value}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
                 </View>
               </View>
 
@@ -456,7 +525,7 @@ export default function BarangayComplaintForm() {
                   style={[
                     styles.button,
                     styles.submitButton,
-                    (!complaintData.firstName || !complaintData.isDeclarationChecked) && styles.submitButtonDisabled
+                    (!complaintData.fullname || !complaintData.isDeclarationChecked) && styles.submitButtonDisabled
                   ]}
                   onPress={handleSubmit}
                   disabled={isLoading}
